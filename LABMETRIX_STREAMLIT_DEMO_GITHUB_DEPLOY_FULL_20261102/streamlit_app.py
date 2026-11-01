@@ -13,6 +13,11 @@ import streamlit as st
 from db import Store, Conflict, Invalid
 from exports import docx_for_order,pdf_for_order,archive_for_order
 
+# Resolve bundled files relative to the application, not Streamlit's working directory.
+BASE_DIR = Path(__file__).resolve().parent
+LOGO_PATH = BASE_DIR / 'assets' / 'logo.png'
+LOCAL_DB_PATH = BASE_DIR / 'runtime' / 'labmetrix_demo.sqlite3'
+
 st.set_page_config(page_title='LABMETRIX | DEMO trực tuyến',page_icon='🧪',layout='wide',initial_sidebar_state='collapsed')
 
 st.markdown('''<style>
@@ -43,7 +48,7 @@ def secret(key,default=''):
 @st.cache_resource(show_spinner='Khởi tạo kho DEMO chung...')
 def get_store(url):return Store(url)
 
-url=secret('LABMETRIX_DATABASE_URL') or 'sqlite:///runtime/labmetrix_demo.sqlite3'
+url=secret('LABMETRIX_DATABASE_URL') or f'sqlite:///{LOCAL_DB_PATH.as_posix()}'
 try:store=get_store(url)
 except Exception as exc:
     st.error('Không thể mở cơ sở dữ liệu. Kiểm tra LABMETRIX_DATABASE_URL trong Streamlit Secrets.')
@@ -72,7 +77,8 @@ PAGES=['🏠 Tổng quan','📄 Hợp đồng','📋 Đơn quan trắc','🧪 M�
        '📝 Công việc & bàn giao','📦 Báo cáo & xuất file','📜 Nhật ký']
 
 with st.sidebar:
-    st.image('assets/logo.png',width=78)
+    if LOGO_PATH.is_file():
+        st.image(str(LOGO_PATH),width=78)
     st.markdown('### LABMETRIX')
     st.caption('Bản trình diễn Streamlit · Dữ liệu giả')
     st.selectbox('Vai trò mô phỏng',roles,key='role')
@@ -86,7 +92,9 @@ with st.sidebar:
     st.caption('Vai trò chỉ để trình diễn; không phải phân quyền bảo mật thực.')
 
 head1,head2=st.columns([1,5],vertical_alignment='center')
-with head1:st.image('assets/logo.png',width=64)
+with head1:
+    if LOGO_PATH.is_file():
+        st.image(str(LOGO_PATH),width=64)
 with head2:
     st.markdown('## LABMETRIX')
     st.caption('Quản lý phòng thí nghiệm & quan trắc | BẢN DEMO TRỰC TUYẾN')
